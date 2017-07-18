@@ -26,14 +26,30 @@ public class SimplePlatformController : MonoBehaviour {
 	void Update () {
 		grounded = Physics2D.Linecast (transform.position, groundCheck.position, 1 << LayerMask.NameToLayer ("Ground"));
 
-		if (Input.GetButtonDown ("Jump") && grounded) {
-			jump = true;	
-		}
+		#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WEBPLAYER
+			if (Input.GetButtonDown ("Jump") && grounded)
+		    {
+				jump = true;	
+			}
+		#else
+			if (Input.touchCount > 0)
+			{
+				Touch myTouch = Input.touches[0];
+				if (myTouch.phase == TouchPhase.Ended && grounded)
+				{
+					jump = true;
+				}
+			}
+		#endif
 	}
 
 	void FixedUpdate()
 	{
-		float h = Input.GetAxis("Horizontal");
+		#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WEBPLAYER
+			float h = Input.GetAxis("Horizontal");
+		#else
+			float h = maxSpeed;
+		#endif
 		anim.SetFloat("Speed", Mathf.Abs(h));
 
 		// Increase speed if possible
@@ -41,6 +57,7 @@ public class SimplePlatformController : MonoBehaviour {
 		{
 			rb2d.AddForce(Vector2.right * h * moveForce);
 		}
+
 
 		// Cap movement speed
 		if (Mathf.Abs(rb2d.velocity.x) > maxSpeed)
